@@ -35,39 +35,3 @@ jobs:
           git add episodes.json
           git commit -m "Mise à jour automatique de episodes.json" || echo "Pas de modifications à pousser"
           git push
-
-name: Fetch and Convert Episodes
-
-on:
-  push:
-    branches:
-      - main
-  schedule:
-    - cron: '0 * * * *'  # Exécute chaque heure
-  workflow_dispatch:  # Permet de lancer manuellement le script
-
-jobs:
-  fetch-episodes:
-    runs-on: ubuntu-latest
-    steps:
-      - name: 🛎️ Cloner le dépôt
-        uses: actions/checkout@v3
-
-      - name: 📦 Installer Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18' # Version recommandée
-
-      - name: 📥 Installer les dépendances
-        run: npm install node-fetch@2
-
-      - name: 🔄 Exécuter le bot
-        run: node javascript/bot.js
-
-      - name: 📤 Commiter le fichier mis à jour
-        run: |
-          git config --global user.name "GitHub Actions Bot"
-          git config --global user.email "actions@github.com"
-          git add episodes.json
-          git commit -m "Mise à jour automatique de episodes.json" || echo "Aucune modification à commiter"
-          git push
