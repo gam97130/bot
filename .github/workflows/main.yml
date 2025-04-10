@@ -1,0 +1,34 @@
+name: Update Episodes JSON
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "0 */6 * * *"  # Exécuter toutes les 6 heures
+
+jobs:
+  update-episodes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run bot script
+        run: node javascript/bot.js "https://anime-sama.fr/catalogue/overlord/saison1/vf/episodes.js"
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add episodes.json
+          git commit -m "Mise à jour automatique de episodes.json" || echo "Aucune modification à commettre"
+          git push
