@@ -15,12 +15,10 @@ async function fetchAndConvertEpisodes(sourceUrl) {
         if (!response.ok) throw new Error(`Erreur HTTP : ${response.status}`);
 
         let jsText = await response.text();
-
-        // 🔍 Afficher les 500 premiers caractères pour voir ce qu'on récupère
         console.log("🔍 Contenu récupéré (extrait) :\n", jsText.slice(0, 500));
 
         // 🔍 Extraction des listes eps1, eps2, etc.
-        const match = jsText.match(/var\s+(\w+)\s*=\s*(\[.*?\]);/gs);
+        const match = jsText.match(/var\s+(\w+)\s*=\s*(\[[\s\S]*?\]);/gs);
         if (!match) {
             console.error("❌ Erreur : Aucune donnée trouvée dans episodes.js !");
             return false;
@@ -28,14 +26,18 @@ async function fetchAndConvertEpisodes(sourceUrl) {
 
         let episodes = {};
         match.forEach(block => {
-            const parts = block.match(/var\s+(\w+)\s*=\s*(\[.*?\]);/s);
+            const parts = block.match(/var\s+(\w+)\s*=\s*(\[[\s\S]*?\]);/s);
             if (parts) {
                 let key = parts[1]; // Nom de la variable (eps1, eps2, ...)
                 let array = parts[2]; // Contenu du tableau
-                
-                // ✅ Transformation en JSON valide
+
+                // ✅ Correction des apostrophes et espaces
+                let jsonArray = array
+                    .replace(/'/g, '"')    // Convertit les apostrophes en guillemets
+                    .replace(/,\s*]/g, "]"); // Supprime les virgules en trop à la fin des tableaux
+
                 try {
-                    episodes[key] = JSON.parse(array.replace(/'/g, '"'));
+                    episodes[key] = JSON.parse(jsonArray);
                 } catch (parseError) {
                     console.error(`❌ Erreur de parsing JSON pour ${key} :`, parseError);
                 }
