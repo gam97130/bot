@@ -2,7 +2,7 @@ const fs = require("fs");
 const fetch = require("node-fetch");
 const { execSync } = require("child_process");
 
-// 🌍 URL par défaut si aucun argument n'est fourni
+// 🌍 URL du fichier episodes.js
 const DEFAULT_SOURCE_URL = "https://anime-sama.fr/catalogue/overlord/saison1/vf/episodes.js?filever=2498";
 
 // 🔄 Récupération de l'URL depuis les arguments ou fallback sur la valeur par défaut
@@ -16,9 +16,15 @@ async function fetchAndConvertEpisodes(sourceUrl) {
 
         let jsText = await response.text();
 
+        // 🔍 Afficher les 500 premiers caractères pour voir ce qu'on récupère
+        console.log("🔍 Contenu récupéré (extrait) :\n", jsText.slice(0, 500));
+
         // 🔍 Extraction des listes eps1, eps2, etc.
         const match = jsText.match(/var\s+(\w+)\s*=\s*(\[.*?\]);/gs);
-        if (!match) throw new Error("❌ Aucune donnée trouvée dans episodes.js");
+        if (!match) {
+            console.error("❌ Erreur : Aucune donnée trouvée dans episodes.js !");
+            return false;
+        }
 
         let episodes = {};
         match.forEach(block => {
@@ -28,11 +34,20 @@ async function fetchAndConvertEpisodes(sourceUrl) {
                 let array = parts[2]; // Contenu du tableau
                 
                 // ✅ Transformation en JSON valide
-                episodes[key] = JSON.parse(array.replace(/'/g, '"'));
+                try {
+                    episodes[key] = JSON.parse(array.replace(/'/g, '"'));
+                } catch (parseError) {
+                    console.error(`❌ Erreur de parsing JSON pour ${key} :`, parseError);
+                }
             }
         });
 
         // 📄 Sauvegarde en episodes.json
+        if (Object.keys(episodes).length === 0) {
+            console.error("❌ Erreur : Aucun épisode trouvé !");
+            return false;
+        }
+
         fs.writeFileSync("episodes.json", JSON.stringify(episodes, null, 2));
         console.log("✅ episodes.json mis à jour avec succès !");
         return true;
@@ -45,6 +60,11 @@ async function fetchAndConvertEpisodes(sourceUrl) {
 // 🚀 Fonction pour commiter et pousser sur GitHub
 function pushToGitHub() {
     try {
+        if (!fs.existsSync("episodes.json")) {
+            console.error("❌ Erreur : episodes.json n'a pas été généré !");
+            process.exit(1);
+        }
+
         console.log("📤 Envoi de episodes.json sur GitHub...");
         execSync("git add episodes.json");
         execSync('git commit -m "🔄 Mise à jour automatique de episodes.json"');
@@ -59,7 +79,3 @@ function pushToGitHub() {
 fetchAndConvertEpisodes(sourceUrl).then(success => {
     if (success) pushToGitHub();
 });
-if (!fs.existsSync("episodes.json")) {
-    console.error("❌ Erreur : episodes.json n'a pas été généré !");
-    process.exit(1);
-}
