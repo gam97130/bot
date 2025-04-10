@@ -15,8 +15,8 @@ async function findEpisodesJsUrl(baseUrl) {
 
         const html = await response.text();
 
-        // 🔍 Chercher un script contenant episodes.js
-        const match = html.match(/<script\s+src=["']([^"']*episodes\.js\?filever=\d+)["']/);
+        // 🔍 Chercher un script contenant episodes.js (en gérant les espaces et `defer`)
+        const match = html.match(/<script[^>]*src=['"]([^"']*episodes\.js\?filever=\d+)['"][^>]*>/);
         if (!match) throw new Error("❌ Aucun fichier episodes.js trouvé sur la page.");
 
         // 🏗 Construire l’URL complète
