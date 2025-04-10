@@ -14,22 +14,27 @@ async function fetchAndConvertEpisodes(sourceUrl) {
         const response = await fetch(sourceUrl);
         if (!response.ok) throw new Error(`Erreur HTTP : ${response.status}`);
 
-        const jsText = await response.text();
+        let jsText = await response.text();
 
-        // 🔍 Extraire les variables eps1, eps2, etc.
+        // 🔍 Extraction des listes eps1, eps2, etc.
         const match = jsText.match(/var\s+(\w+)\s*=\s*(\[.*?\]);/gs);
         if (!match) throw new Error("❌ Aucune donnée trouvée dans episodes.js");
 
         let episodes = {};
         match.forEach(block => {
-            const [_, key, array] = block.match(/var\s+(\w+)\s*=\s*(\[.*?\]);/s);
-            episodes[key] = JSON.parse(array.replace(/'/g, '"'));
+            const parts = block.match(/var\s+(\w+)\s*=\s*(\[.*?\]);/s);
+            if (parts) {
+                let key = parts[1]; // Nom de la variable (eps1, eps2, ...)
+                let array = parts[2]; // Contenu du tableau
+                
+                // ✅ Transformation en JSON valide
+                episodes[key] = JSON.parse(array.replace(/'/g, '"'));
+            }
         });
 
-        // 📄 Sauvegarder en episodes.json
+        // 📄 Sauvegarde en episodes.json
         fs.writeFileSync("episodes.json", JSON.stringify(episodes, null, 2));
-        console.log("✅ episodes.json mis à jour !");
-
+        console.log("✅ episodes.json mis à jour avec succès !");
         return true;
     } catch (error) {
         console.error("❌ Erreur :", error);
@@ -42,7 +47,7 @@ function pushToGitHub() {
     try {
         console.log("📤 Envoi de episodes.json sur GitHub...");
         execSync("git add episodes.json");
-        execSync('git commit -m "Mise à jour automatique de episodes.json"');
+        execSync('git commit -m "🔄 Mise à jour automatique de episodes.json"');
         execSync("git push");
         console.log("✅ Mise à jour réussie !");
     } catch (error) {
