@@ -35,7 +35,6 @@ jobs:
           git add episodes.json
           git commit -m "Mise à jour automatique de episodes.json" || echo "Pas de modifications à pousser"
           git push
-Ajout du workflow GitHub Actions
 name: Fetch and Convert Episodes
 
 on:
