@@ -59,3 +59,7 @@ function pushToGitHub() {
 fetchAndConvertEpisodes(sourceUrl).then(success => {
     if (success) pushToGitHub();
 });
+if (!fs.existsSync("episodes.json")) {
+    console.error("❌ Erreur : episodes.json n'a pas été généré !");
+    process.exit(1);
+}
