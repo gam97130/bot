@@ -3,7 +3,8 @@ const fetch = require("node-fetch");
 const { execSync } = require("child_process");
 
 // 🌍 URL de la saison (base)
-const BASE_URL = process.argv[2] || "https://anime-sama.fr/catalogue/overlord/saison1/vf/";
+const BASE_URL = console.log("🌐 URL utilisée par le bot :", BASE_URL);
+ process.argv[2] || "https://anime-sama.fr/catalogue/overlord/saison1/vf/";
 
 // 🔑 Token GitHub (nécessaire pour push en mode CI/CD)
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || ""; 
