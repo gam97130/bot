@@ -1,0 +1,33 @@
+name: Mise à jour de episodes.json
+
+on:
+  workflow_dispatch: # Permet de lancer manuellement le workflow
+  schedule:
+    - cron: '0 */6 * * *' # Exécute toutes les 6 heures
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🛎️ Récupérer le dépôt
+        uses: actions/checkout@v3
+
+      - name: 📦 Installer Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: 📥 Installer les dépendances
+        run: npm install node-fetch@2
+
+      - name: 🔄 Exécuter le bot
+        run: node javascript/bot.js "https://anime-sama.fr/catalogue/overlord/saison1/vf/"
+
+      - name: 📤 Pousser les changements
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+          git add episodes.json
+          git commit -m "🔄 Mise à jour automatique de episodes.json" || echo "Pas de changements"
+          git push
+Ajout du workflow GitHub Actions pour récupérer episodes.json automatiquement
