@@ -3,7 +3,7 @@ const fetch = require("node-fetch");
 const { execSync } = require("child_process");
 
 // 🌍 URL par défaut si aucun argument n'est fourni
-const DEFAULT_SOURCE_URL = "https://anime-sama.fr/catalogue/overlord/saison1/vf/episodes.js";
+const DEFAULT_SOURCE_URL = "https://anime-sama.fr/catalogue/overlord/saison1/vf/episodes.js?filever=2498";
 
 // 🔄 Récupération de l'URL depuis les arguments ou fallback sur la valeur par défaut
 const sourceUrl = process.argv[2] || DEFAULT_SOURCE_URL;
