@@ -2,11 +2,33 @@ const fs = require("fs");
 const fetch = require("node-fetch");
 const { execSync } = require("child_process");
 
-// 🌍 URL du fichier episodes.js
-const DEFAULT_SOURCE_URL = "https://anime-sama.fr/catalogue/overlord/saison1/vf/episodes.js?filever=2498";
+// 🌍 URL de la saison (base)
+const BASE_URL = process.argv[2] || "https://anime-sama.fr/catalogue/overlord/saison1/vf/";
 
-// 🔄 Récupération de l'URL depuis les arguments ou fallback sur la valeur par défaut
-const sourceUrl = process.argv[2] || DEFAULT_SOURCE_URL;
+async function findEpisodesJsUrl(baseUrl) {
+    try {
+        console.log(`🔄 Recherche du fichier episodes.js sur ${baseUrl}...`);
+
+        // 📥 Télécharger le contenu HTML de la page de la saison
+        const response = await fetch(baseUrl);
+        if (!response.ok) throw new Error(`Erreur HTTP : ${response.status}`);
+
+        const html = await response.text();
+
+        // 🔍 Chercher un lien vers "episodes.js?filever=..."
+        const match = html.match(/href=["']([^"']*episodes\.js\?filever=\d+)["']/);
+        if (!match) throw new Error("❌ Aucun fichier episodes.js trouvé sur la page.");
+
+        // 🏗 Construire l’URL complète
+        const episodesJsUrl = new URL(match[1], baseUrl).href;
+        console.log(`✅ Fichier episodes.js trouvé : ${episodesJsUrl}`);
+
+        return episodesJsUrl;
+    } catch (error) {
+        console.error("❌ Erreur lors de la recherche de episodes.js :", error);
+        process.exit(1);
+    }
+}
 
 async function fetchAndConvertEpisodes(sourceUrl) {
     try {
@@ -78,6 +100,8 @@ function pushToGitHub() {
 }
 
 // 🔄 Exécution du bot
-fetchAndConvertEpisodes(sourceUrl).then(success => {
-    if (success) pushToGitHub();
-});
+findEpisodesJsUrl(BASE_URL)
+    .then(fetchAndConvertEpisodes)
+    .then(success => {
+        if (success) pushToGitHub();
+    });
