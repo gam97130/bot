@@ -25,10 +25,12 @@ jobs:
       - name: Run bot script
         run: node javascript/bot.js "https://anime-sama.fr/catalogue/overlord/saison1/vf/episodes.js"
 
-      - name: Commit and push changes
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add episodes.json
-          git commit -m "Mise à jour automatique de episodes.json" || echo "Aucune modification à commettre"
-          git push
+     - name: 📤 Commit et push
+  env:
+    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  run: |
+    git config --global user.name "GitHub Actions"
+    git config --global user.email "actions@github.com"
+    git add episodes.json
+    git commit -m "🔄 Mise à jour automatique de episodes.json" || echo "Aucune modification à commettre"
+    git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git HEAD:main
