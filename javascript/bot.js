@@ -2,7 +2,12 @@ const fs = require("fs");
 const fetch = require("node-fetch");
 const { execSync } = require("child_process");
 
-// 📥 Fonction pour récupérer `episodes.js` et le convertir
+// 🌍 URL par défaut si aucun argument n'est fourni
+const DEFAULT_SOURCE_URL = "https://anime-sama.fr/catalogue/overlord/saison1/vf/episodes.js";
+
+// 🔄 Récupération de l'URL depuis les arguments ou fallback sur la valeur par défaut
+const sourceUrl = process.argv[2] || DEFAULT_SOURCE_URL;
+
 async function fetchAndConvertEpisodes(sourceUrl) {
     try {
         console.log(`🔄 Téléchargement de episodes.js depuis ${sourceUrl}...`);
@@ -46,12 +51,6 @@ function pushToGitHub() {
 }
 
 // 🔄 Exécution du bot
-const sourceUrl = process.argv[2]; // L'URL est passée en paramètre
-if (!sourceUrl) {
-    console.error("❌ Aucune URL fournie !");
-    process.exit(1);
-}
-
 fetchAndConvertEpisodes(sourceUrl).then(success => {
     if (success) pushToGitHub();
 });
