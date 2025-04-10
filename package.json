@@ -1,0 +1,12 @@
+{
+  "name": "bot-episodes",
+  "version": "1.0.0",
+  "description": "Bot pour récupérer et convertir episodes.js en episodes.json",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node javascript/bot.js"
+  },
+  "dependencies": {
+    "node-fetch": "^2.6.1"
+  }
+}
