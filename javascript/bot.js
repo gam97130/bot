@@ -5,6 +5,9 @@ const { execSync } = require("child_process");
 // 🌍 URL de la saison (base)
 const BASE_URL = process.argv[2] || "https://anime-sama.fr/catalogue/overlord/saison1/vf/";
 
+// 🔑 Token GitHub (nécessaire pour push en mode CI/CD)
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN || ""; 
+
 async function findEpisodesJsUrl(baseUrl) {
     try {
         console.log(`🔄 Recherche du fichier episodes.js sur ${baseUrl}...`);
@@ -15,7 +18,7 @@ async function findEpisodesJsUrl(baseUrl) {
 
         const html = await response.text();
 
-        // 🔍 Chercher un script contenant episodes.js (en gérant les espaces et `defer`)
+        // 🔍 Chercher un script contenant episodes.js
         const match = html.match(/<script[^>]*src=['"]([^"']*episodes\.js\?filever=\d+)['"][^>]*>/);
         if (!match) throw new Error("❌ Aucun fichier episodes.js trouvé sur la page.");
 
@@ -72,6 +75,14 @@ async function fetchAndConvertEpisodes(sourceUrl) {
             return false;
         }
 
+        // 🔄 Correction de la numérotation (de 0-12 à 1-13)
+        Object.keys(episodes).forEach(key => {
+            episodes[key] = episodes[key].map((url, index) => ({
+                episode: index + 1, // Correction de la numérotation
+                url: url
+            }));
+        });
+
         fs.writeFileSync("episodes.json", JSON.stringify(episodes, null, 2));
         console.log("✅ episodes.json mis à jour avec succès !");
         return true;
@@ -90,9 +101,26 @@ function pushToGitHub() {
         }
 
         console.log("📤 Envoi de episodes.json sur GitHub...");
+
+        // Vérifier si le repo Git est bien initialisé
+        try {
+            execSync("git rev-parse --is-inside-work-tree");
+        } catch {
+            console.error("❌ Erreur : Ce dossier n'est pas un dépôt Git !");
+            process.exit(1);
+        }
+
+        // Configuration GitHub si un token est disponible
+        if (GITHUB_TOKEN) {
+            execSync(`git config --global user.email "bot@github.com"`);
+            execSync(`git config --global user.name "GitHub Bot"`);
+            execSync(`git remote set-url origin https://${GITHUB_TOKEN}@github.com/gam97130/bot.js.git`);
+        }
+
         execSync("git add episodes.json");
         execSync('git commit -m "🔄 Mise à jour automatique de episodes.json"');
-        execSync("git push");
+        execSync("git push origin main");
+        
         console.log("✅ Mise à jour réussie !");
     } catch (error) {
         console.error("❌ Erreur lors du push GitHub :", error);
