@@ -30,4 +30,3 @@ jobs:
           git add episodes.json
           git commit -m "🔄 Mise à jour automatique de episodes.json" || echo "Pas de changements"
           git push
-Ajout du workflow GitHub Actions pour récupérer episodes.json automatiquement
