@@ -2,7 +2,7 @@ const fs = require("fs");
 const fetch = require("node-fetch");
 const { execSync } = require("child_process");
 
-// 🌍 URL de la saison (base)
+// 🌐 URL de la saison (base)
 const BASE_URL = process.argv[2] || "https://anime-sama.fr/catalogue/overlord/saison1/vf/";
 console.log("\ud83c\udf10 URL utilisée par le bot :", BASE_URL);
 
@@ -23,7 +23,7 @@ async function findEpisodesJsUrl(baseUrl) {
         const match = html.match(/<script[^>]*src=['"]([^"']*episodes\.js\?filever=\d+)['"][^>]*>/);
         if (!match) throw new Error("❌ Aucun fichier episodes.js trouvé sur la page.");
 
-        // 🏗 Construire l’URL complète
+        // 🏰 Construire l’URL complète
         const episodesJsUrl = new URL(match[1], baseUrl).href;
         console.log(`✅ Fichier episodes.js trouvé : ${episodesJsUrl}`);
 
@@ -72,13 +72,7 @@ async function fetchAndConvertEpisodes(sourceUrl) {
             }
         });
 
-        console.log("\ud83d\udd0d Données extraites :", episodes);
-
-        // 📄 Sauvegarde en episodes.json
-        if (Object.keys(episodes).length === 0) {
-            console.error("❌ Erreur : Aucun épisode trouvé !");
-            return false;
-        }
+        console.log("\ud83d\udd0d Données extraites avant sauvegarde :", JSON.stringify(episodes, null, 2));
 
         // 🔄 Correction de la numérotation (de 0-12 à 1-13)
         Object.keys(episodes).forEach(key => {
@@ -114,6 +108,11 @@ function pushToGitHub() {
             console.error("❌ Erreur : Ce dossier n'est pas un dépôt Git !");
             process.exit(1);
         }
+
+        console.log("\ud83d\udc49 Commandes Git exécutées :");
+        console.log("git add episodes.json");
+        console.log("git commit -m \"\ud83d\udd04 Mise à jour automatique de episodes.json\"");
+        console.log("git push origin main");
 
         // Configuration GitHub si un token est disponible
         if (GITHUB_TOKEN) {
