@@ -7,6 +7,8 @@ on:
   schedule:
     - cron: '0 * * * *'  # Exécute chaque heure
   workflow_dispatch:  # Permet de lancer manuellement le script
+  repository_dispatch:  # Ajoute la prise en charge de l'événement envoyé par Postman
+    types: [fetch-season]
 
 jobs:
   fetch-episodes:
@@ -23,8 +25,8 @@ jobs:
       - name: 📥 Installer les dépendances
         run: npm install node-fetch@2
 
-      - name: 🔄 Exécuter le bot
-        run: node javascript/bot.js
+      - name: 🔄 Exécuter le bot avec l'URL reçue
+        run: node javascript/bot.js ${{ github.event.client_payload.url }}
 
       - name: 📤 Commiter le fichier mis à jour
         run: |
