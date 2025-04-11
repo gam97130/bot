@@ -119,7 +119,7 @@ function pushToGitHub() {
         if (GITHUB_TOKEN) {
             execSync(`git config --global user.email "bot@github.com"`);
             execSync(`git config --global user.name "GitHub Bot"`);
-            execSync(`git remote set-url origin https://${GITHUB_TOKEN}@github.com/gam97130/bot.js.git`);
+            execSync(`git remote set-url origin https://${GITHUB_TOKEN}@github.com/gam97130/bot.git`);
         }
 
         execSync("git add episodes.json");
