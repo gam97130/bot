@@ -20,7 +20,15 @@ async function findEpisodesJsUrl(baseUrl) {
         const html = await response.text();
 
         // 🔍 Chercher un script contenant episodes.js
-        const match = html.match(/<script[^>]*src=['"]([^"']*episodes\.js\?filever=\d+)['"][^>]*>/);
+        const matches = [...html.matchAll(/<script[^>]*src=['"]([^"']*episodes\.js\?filever=\d+)['"][^>]*>/g)];
+
+if (!matches || matches.length === 0) throw new Error("❌ Aucun fichier episodes.js trouvé sur la page.");
+
+// Vérifie si l'URL correspond bien à la saison demandée
+const correctMatch = matches.find(m => m[1].includes(BASE_URL));
+
+const episodesJsUrl = correctMatch ? new URL(correctMatch[1], baseUrl).href : new URL(matches[0][1], baseUrl).href;
+       
         if (!match) throw new Error("❌ Aucun fichier episodes.js trouvé sur la page.");
 
         // 🏰 Construire l’URL complète
