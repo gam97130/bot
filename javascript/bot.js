@@ -22,16 +22,13 @@ async function findEpisodesJsUrl(baseUrl) {
         // 🔍 Chercher un script contenant episodes.js
         const matches = [...html.matchAll(/<script[^>]*src=['"]([^"']*episodes\.js\?filever=\d+)['"][^>]*>/g)];
 
-if (!matches || matches.length === 0) throw new Error("❌ Aucun fichier episodes.js trouvé sur la page.");
+        if (matches.length === 0) throw new Error("❌ Aucun fichier episodes.js trouvé sur la page.");
 
-// Vérifie si l'URL correspond bien à la saison demandée
-const correctMatch = matches.find(m => m[1].includes(BASE_URL));
-
-const episodesJsUrl = correctMatch ? new URL(correctMatch[1], baseUrl).href : new URL(matches[0][1], baseUrl).href;
-        if (!match) throw new Error("❌ Aucun fichier episodes.js trouvé sur la page.");
+        // Vérifie si l'URL correspond bien à la saison demandée
+        const correctMatch = matches.find(m => baseUrl.includes(m[1])) || matches[0];
 
         // 🏰 Construire l’URL complète
-        const episodesJsUrl = new URL(match[1], baseUrl).href;
+        const episodesJsUrl = new URL(correctMatch[1], baseUrl).href;
         console.log(`✅ Fichier episodes.js trouvé : ${episodesJsUrl}`);
 
         return episodesJsUrl;
@@ -122,7 +119,7 @@ function pushToGitHub() {
 
         console.log("👉 Commandes Git exécutées :");
         console.log("git add episodes.json");
-        console.log("git commit -m \"🔄 Mise à jour automatique de episodes.json\"");
+        console.log('git commit -m "🔄 Mise à jour automatique de episodes.json"');
         console.log("git push origin main");
 
         // Configuration GitHub si un token est disponible
@@ -134,15 +131,15 @@ function pushToGitHub() {
 
         execSync("git add episodes.json");
 
-// Vérifier s'il y a des changements à commit
-const changes = execSync("git status --porcelain").toString().trim();
-if (!changes) {
-    console.log("⚠️ Aucun changement détecté, commit annulé.");
-    return;
-}
+        // Vérifier s'il y a des changements à commit
+        const changes = execSync("git status --porcelain").toString().trim();
+        if (!changes) {
+            console.log("⚠️ Aucun changement détecté, commit annulé.");
+            return;
+        }
 
-execSync('git commit -m "🔄 Mise à jour automatique de episodes.json"');
-execSync("git push origin main");
+        execSync('git commit -m "🔄 Mise à jour automatique de episodes.json"');
+        execSync("git push origin main");
 
         console.log("✅ Mise à jour réussie !");
     } catch (error) {
