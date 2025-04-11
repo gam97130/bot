@@ -28,7 +28,6 @@ if (!matches || matches.length === 0) throw new Error("❌ Aucun fichier episode
 const correctMatch = matches.find(m => m[1].includes(BASE_URL));
 
 const episodesJsUrl = correctMatch ? new URL(correctMatch[1], baseUrl).href : new URL(matches[0][1], baseUrl).href;
-       
         if (!match) throw new Error("❌ Aucun fichier episodes.js trouvé sur la page.");
 
         // 🏰 Construire l’URL complète
