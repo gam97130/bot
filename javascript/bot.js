@@ -2,16 +2,16 @@ const fs = require("fs");
 const fetch = require("node-fetch");
 const { execSync } = require("child_process");
 
-// 🌐 URL de la saison (base)
+// 🌍 URL de la saison (base)
 const BASE_URL = process.argv[2] || "https://anime-sama.fr/catalogue/overlord/saison1/vf/";
-console.log("\ud83c\udf10 URL utilisée par le bot :", BASE_URL);
+console.log("🌐 URL utilisée par le bot :", BASE_URL);
 
 // 🔑 Token GitHub (nécessaire pour push en mode CI/CD)
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN || ""; 
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN || "";
 
 async function findEpisodesJsUrl(baseUrl) {
     try {
-        console.log(`\ud83d\udd04 Recherche du fichier episodes.js sur ${baseUrl}...`);
+        console.log(`🔄 Recherche du fichier episodes.js sur ${baseUrl}...`);
 
         // 👥 Télécharger le contenu HTML de la page de la saison
         const response = await fetch(baseUrl);
@@ -36,12 +36,12 @@ async function findEpisodesJsUrl(baseUrl) {
 
 async function fetchAndConvertEpisodes(sourceUrl) {
     try {
-        console.log(`\ud83d\udd04 Téléchargement de episodes.js depuis ${sourceUrl}...`);
+        console.log(`🔄 Téléchargement de episodes.js depuis ${sourceUrl}...`);
         const response = await fetch(sourceUrl);
         if (!response.ok) throw new Error(`Erreur HTTP : ${response.status}`);
 
         let jsText = await response.text();
-        console.log("\ud83d\udd0d Contenu récupéré (extrait) :\n", jsText.slice(0, 500));
+        console.log("🔍 Contenu récupéré (extrait) :\n", jsText.slice(0, 500));
 
         // 🔍 Extraction des listes eps1, eps2, etc.
         const match = jsText.match(/var\s+(\w+)\s*=\s*(\[[\s\S]*?\]);/gs);
@@ -57,7 +57,7 @@ async function fetchAndConvertEpisodes(sourceUrl) {
                 let key = parts[1]; // Nom de la variable (eps1, eps2, ...)
                 let array = parts[2]; // Contenu du tableau
 
-                console.log(`\ud83d\udd0d Extraction de ${key}`);
+                console.log(`🔍 Extraction de ${key}`);
 
                 // ✅ Correction des apostrophes et espaces
                 let jsonArray = array
@@ -72,7 +72,7 @@ async function fetchAndConvertEpisodes(sourceUrl) {
             }
         });
 
-        console.log("\ud83d\udd0d Données extraites avant sauvegarde :", JSON.stringify(episodes, null, 2));
+        console.log("🔍 Données extraites avant sauvegarde :", JSON.stringify(episodes, null, 2));
 
         // 🔄 Correction de la numérotation (de 0-12 à 1-13)
         Object.keys(episodes).forEach(key => {
@@ -82,8 +82,10 @@ async function fetchAndConvertEpisodes(sourceUrl) {
             }));
         });
 
-        console.log("📁 Enregistrement dans episodes.json à la racine !");
-        fs.writeFileSync("episodes.json", JSON.stringify(episodes, null, 2));
+        const filePath = "episodes.json";
+        console.log(`📁 Enregistrement dans ${filePath} à la racine du dépôt !`);
+        fs.writeFileSync(filePath, JSON.stringify(episodes, null, 2));
+
         console.log("✅ episodes.json mis à jour avec succès !");
         return true;
     } catch (error) {
@@ -95,12 +97,13 @@ async function fetchAndConvertEpisodes(sourceUrl) {
 // 🚀 Fonction pour commiter et pousser sur GitHub
 function pushToGitHub() {
     try {
-        if (!fs.existsSync("episodes.json")) {
+        const filePath = "episodes.json";
+        if (!fs.existsSync(filePath)) {
             console.error("❌ Erreur : episodes.json n'a pas été généré !");
             process.exit(1);
         }
 
-        console.log("\ud83d\udce4 Envoi de episodes.json sur GitHub...");
+        console.log("📤 Envoi de episodes.json sur GitHub...");
 
         // Vérifier si le repo Git est bien initialisé
         try {
@@ -110,9 +113,9 @@ function pushToGitHub() {
             process.exit(1);
         }
 
-        console.log("\ud83d\udc49 Commandes Git exécutées :");
+        console.log("👉 Commandes Git exécutées :");
         console.log("git add episodes.json");
-        console.log("git commit -m \"\ud83d\udd04 Mise à jour automatique de episodes.json\"");
+        console.log("git commit -m \"🔄 Mise à jour automatique de episodes.json\"");
         console.log("git push origin main");
 
         // Configuration GitHub si un token est disponible
@@ -123,9 +126,9 @@ function pushToGitHub() {
         }
 
         execSync("git add episodes.json");
-        execSync('git commit -m "\ud83d\udd04 Mise à jour automatique de episodes.json"');
+        execSync('git commit -m "🔄 Mise à jour automatique de episodes.json"');
         execSync("git push origin main");
-        
+
         console.log("✅ Mise à jour réussie !");
     } catch (error) {
         console.error("❌ Erreur lors du push GitHub :", error);
