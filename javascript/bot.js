@@ -126,8 +126,16 @@ function pushToGitHub() {
         }
 
         execSync("git add episodes.json");
-        execSync('git commit -m "🔄 Mise à jour automatique de episodes.json"');
-        execSync("git push origin main");
+
+// Vérifier s'il y a des changements à commit
+const changes = execSync("git status --porcelain").toString().trim();
+if (!changes) {
+    console.log("⚠️ Aucun changement détecté, commit annulé.");
+    return;
+}
+
+execSync('git commit -m "🔄 Mise à jour automatique de episodes.json"');
+execSync("git push origin main");
 
         console.log("✅ Mise à jour réussie !");
     } catch (error) {
