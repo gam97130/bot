@@ -4,16 +4,16 @@ const { execSync } = require("child_process");
 
 // 🌍 URL de la saison (base)
 const BASE_URL = process.argv[2] || "https://anime-sama.fr/catalogue/overlord/saison1/vf/";
-console.log("🌐 URL utilisée par le bot :", BASE_URL);
+console.log("\ud83c\udf10 URL utilisée par le bot :", BASE_URL);
 
 // 🔑 Token GitHub (nécessaire pour push en mode CI/CD)
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || ""; 
 
 async function findEpisodesJsUrl(baseUrl) {
     try {
-        console.log(`🔄 Recherche du fichier episodes.js sur ${baseUrl}...`);
+        console.log(`\ud83d\udd04 Recherche du fichier episodes.js sur ${baseUrl}...`);
 
-        // 📥 Télécharger le contenu HTML de la page de la saison
+        // 👥 Télécharger le contenu HTML de la page de la saison
         const response = await fetch(baseUrl);
         if (!response.ok) throw new Error(`Erreur HTTP : ${response.status}`);
 
@@ -36,12 +36,12 @@ async function findEpisodesJsUrl(baseUrl) {
 
 async function fetchAndConvertEpisodes(sourceUrl) {
     try {
-        console.log(`🔄 Téléchargement de episodes.js depuis ${sourceUrl}...`);
+        console.log(`\ud83d\udd04 Téléchargement de episodes.js depuis ${sourceUrl}...`);
         const response = await fetch(sourceUrl);
         if (!response.ok) throw new Error(`Erreur HTTP : ${response.status}`);
 
         let jsText = await response.text();
-        console.log("🔍 Contenu récupéré (extrait) :\n", jsText.slice(0, 500));
+        console.log("\ud83d\udd0d Contenu récupéré (extrait) :\n", jsText.slice(0, 500));
 
         // 🔍 Extraction des listes eps1, eps2, etc.
         const match = jsText.match(/var\s+(\w+)\s*=\s*(\[[\s\S]*?\]);/gs);
@@ -57,6 +57,8 @@ async function fetchAndConvertEpisodes(sourceUrl) {
                 let key = parts[1]; // Nom de la variable (eps1, eps2, ...)
                 let array = parts[2]; // Contenu du tableau
 
+                console.log(`\ud83d\udd0d Extraction de ${key}`);
+
                 // ✅ Correction des apostrophes et espaces
                 let jsonArray = array
                     .replace(/'/g, '"')    // Convertit les apostrophes en guillemets
@@ -69,6 +71,8 @@ async function fetchAndConvertEpisodes(sourceUrl) {
                 }
             }
         });
+
+        console.log("\ud83d\udd0d Données extraites :", episodes);
 
         // 📄 Sauvegarde en episodes.json
         if (Object.keys(episodes).length === 0) {
@@ -101,7 +105,7 @@ function pushToGitHub() {
             process.exit(1);
         }
 
-        console.log("📤 Envoi de episodes.json sur GitHub...");
+        console.log("\ud83d\udce4 Envoi de episodes.json sur GitHub...");
 
         // Vérifier si le repo Git est bien initialisé
         try {
@@ -119,7 +123,7 @@ function pushToGitHub() {
         }
 
         execSync("git add episodes.json");
-        execSync('git commit -m "🔄 Mise à jour automatique de episodes.json"');
+        execSync('git commit -m "\ud83d\udd04 Mise à jour automatique de episodes.json"');
         execSync("git push origin main");
         
         console.log("✅ Mise à jour réussie !");
@@ -134,4 +138,3 @@ findEpisodesJsUrl(BASE_URL)
     .then(success => {
         if (success) pushToGitHub();
     });
-
