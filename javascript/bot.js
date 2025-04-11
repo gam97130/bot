@@ -82,6 +82,7 @@ async function fetchAndConvertEpisodes(sourceUrl) {
             }));
         });
 
+        console.log("📁 Enregistrement dans episodes.json à la racine !");
         fs.writeFileSync("episodes.json", JSON.stringify(episodes, null, 2));
         console.log("✅ episodes.json mis à jour avec succès !");
         return true;
