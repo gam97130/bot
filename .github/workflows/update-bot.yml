@@ -6,26 +6,27 @@ on:
       sourceUrl:
         description: "URL du fichier episodes.js"
         required: true
-- cron: "0 */6 * * *" # Exécuter toutes les 6 heures
+
+  schedule:
+    - cron: "0 */6 * * *" # Exécuter toutes les 6 heures
 
 jobs:
-  update-json:
+  update-episodes:
     runs-on: ubuntu-latest
-
     steps:
-      - name: 📥 Cloner le dépôt
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: 🛠 Installer Node.js
-        uses: actions/setup-node@v18
+      - name: Installer Node.js
+        uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: "20"
 
-      - name: 📦 Installer les dépendances
-        run: npm install node-fetch@2
+      - name: Installer les dépendances
+        run: npm install
 
-      - name: 🔄 Exécuter le bot avec l'URL fournie
-        run: node bot.js "${{ github.event.inputs.sourceUrl }}"
+      - name: Exécuter le bot
+        run: node javascript/bot.js ${{ github.event.inputs.sourceUrl }}
 
       - name: 📤 Commit et push
         env:
