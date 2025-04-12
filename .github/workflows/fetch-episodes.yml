@@ -26,7 +26,7 @@ jobs:
         run: npm ci  # Utilise npm ci pour éviter les conflits de dépendances
 
       - name: 🔍 Vérification du payload
-        run: echo "Payload: ${{ toJson(github.event.client_payload) }}"
+  run: echo "Payload: ${{ github.event.client_payload }}"
 
       - name: 🔄 Exécuter le bot avec l'URL reçue
         env:
