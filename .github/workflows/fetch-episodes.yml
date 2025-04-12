@@ -1,21 +1,18 @@
-name: Fetch and Convert Episodes
+name: Update Episodes JSON
 
 on:
   push:
     branches:
       - main
   schedule:
-    - cron: '0 * * * *'  # Exécute chaque heure
-  workflow_dispatch:  # Permet de lancer manuellement le script
-  repository_dispatch:  # Prend en charge l'événement envoyé par Postman
-    types: [fetch-season]
+    - cron: '0 */6 * * *'  # Exécuter toutes les 6 heures
 
 jobs:
-  fetch-episodes:
+  update-episodes:
     runs-on: ubuntu-latest
     steps:
-      - name: 🛎️ Cloner le dépôt
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: 📦 Installer Node.js
         uses: actions/setup-node@v3
