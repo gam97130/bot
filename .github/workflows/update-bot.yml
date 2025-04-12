@@ -6,6 +6,7 @@ on:
       sourceUrl:
         description: "URL du fichier episodes.js"
         required: true
+- cron: "0 */6 * * *" # Exécuter toutes les 6 heures
 
 jobs:
   update-json:
