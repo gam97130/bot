@@ -23,7 +23,7 @@ jobs:
         run: npm install
 
       - name: Run bot script
-        run: node javascript/bot.js "https://anime-sama.fr/catalogue/overlord/saison1/vf/episodes.js"
+        run: node javascript/bot.js "https://anime-sama.fr/catalogue/overlord/saison1/vf/"
 
       - name: Commit et push
         env:
