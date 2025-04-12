@@ -21,8 +21,7 @@ async function findEpisodesJsUrl(baseUrl) {
         if (!matches || matches.length === 0) throw new Error("❌ Aucun fichier episodes.js trouvé sur la page.");
 
         // Sélectionne l'URL qui correspond à la saison demandée
-        const correctMatch = matches.find(m => m[1].includes(baseUrl));
-        const episodesJsUrl = correctMatch ? new URL(correctMatch[1], baseUrl).href : new URL(matches[0][1], baseUrl).href;
+        const episodesJsUrl = new URL(matches[0][1], baseUrl).href;
 
         console.log(`✅ Fichier episodes.js trouvé : ${episodesJsUrl}`);
         return episodesJsUrl;
@@ -130,4 +129,3 @@ findEpisodesJsUrl(BASE_URL)
     .then(success => {
         if (success) pushToGitHub();
     });
-
