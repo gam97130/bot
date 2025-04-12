@@ -8,8 +8,9 @@ on:
     - cron: "0 */6 * * *"  # Exécuter toutes les 6 heures
 
 jobs:
-  update-episodes:
+  update_episodes:  # ⚠️ Remplacé le "-" par "_" pour éviter une éventuelle erreur
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -25,16 +26,16 @@ jobs:
       - name: Run bot script
         run: node javascript/bot.js "https://anime-sama.fr/catalogue/overlord/saison1/vf/"
 
-      - name: Commit et push
+      - name: Commit et push changes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
-          
-          # Vérifier si episodes.json a été modifié
+
+          # Vérifier si episodes.json a changé
           if git diff --quiet episodes.json; then
-            echo "Aucune modification détectée, annulation du commit."
+            echo "Aucune modification détectée, fin du script."
             exit 0
           fi
 
