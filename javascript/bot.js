@@ -2,28 +2,34 @@ const fs = require("fs");
 const fetch = require("node-fetch");
 const { execSync } = require("child_process");
 
-// 🌍 URL de la saison (base)
+// 🌍 URL de la saison fournie en argument
 const BASE_URL = process.argv[2] || "https://anime-sama.fr/catalogue/overlord/saison1/vf/";
 console.log("🌐 URL utilisée par le bot :", BASE_URL);
 
-// 🔑 Token GitHub (nécessaire pour push en mode CI/CD)
+// 🔑 Token GitHub (pour push)
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || "";
 
 async function findEpisodesJsUrl(baseUrl) {
     try {
         console.log(`🔄 Recherche du fichier episodes.js sur ${baseUrl}...`);
+
+        // 📥 Télécharger le HTML de la page
         const response = await fetch(baseUrl);
         if (!response.ok) throw new Error(`Erreur HTTP : ${response.status}`);
 
         const html = await response.text();
-        const matches = [...html.matchAll(/<script[^>]*src=['"]([^"']*episodes\.js\?filever=\d+)['"][^>]*>/g)];
 
-        if (!matches || matches.length === 0) throw new Error("❌ Aucun fichier episodes.js trouvé sur la page.");
+        // 🔍 Chercher un script contenant episodes.js
+        const matches = [...html.matchAll(/<script[^>]*src=['"]([^"']*episodes\.js[^"']*)['"][^>]*>/g)];
 
-        // Sélectionne l'URL qui correspond à la saison demandée
+        if (!matches || matches.length === 0) {
+            throw new Error("❌ Aucun fichier episodes.js trouvé sur la page.");
+        }
+
+        // 🏰 Prendre le premier match et construire l'URL complète
         const episodesJsUrl = new URL(matches[0][1], baseUrl).href;
-
         console.log(`✅ Fichier episodes.js trouvé : ${episodesJsUrl}`);
+
         return episodesJsUrl;
     } catch (error) {
         console.error("❌ Erreur lors de la recherche de episodes.js :", error);
@@ -40,14 +46,15 @@ async function fetchAndConvertEpisodes(sourceUrl) {
         let jsText = await response.text();
         console.log("🔍 Contenu récupéré (extrait) :\n", jsText.slice(0, 500));
 
-        const match = jsText.match(/var\s+(\w+)\s*=\s*(\[[\s\S]*?\]);/gs);
-        if (!match) {
+        // 🔍 Extraction des variables eps1, eps2, etc.
+        const matches = jsText.match(/var\s+(\w+)\s*=\s*(\[[\s\S]*?\]);/gs);
+        if (!matches) {
             console.error("❌ Erreur : Aucune donnée trouvée dans episodes.js !");
             return false;
         }
 
         let episodes = {};
-        match.forEach(block => {
+        matches.forEach(block => {
             const parts = block.match(/var\s+(\w+)\s*=\s*(\[[\s\S]*?\]);/s);
             if (parts) {
                 let key = parts[1];
