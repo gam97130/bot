@@ -34,7 +34,7 @@ jobs:
           git config --global user.email "actions@github.com"
 
           # Vérifier si episodes.json a changé
-          if git diff --quiet episodes.json; then
+          if git diff --quiet HEAD -- episodes.json; then
             echo "Aucune modification détectée, fin du script."
             exit 0
           fi
