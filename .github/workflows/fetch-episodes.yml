@@ -27,6 +27,8 @@ jobs:
 
       - name: 🔄 Exécuter le bot avec l'URL reçue
         run: node javascript/bot.js ${{ github.event.client_payload.url }}
+- name: 🔍 Vérification du payload
+  run: echo "Payload: ${{ toJson(github.event.client_payload) }}"
 
       - name: 📤 Commiter le fichier mis à jour
         run: |
