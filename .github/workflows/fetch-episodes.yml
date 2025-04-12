@@ -7,7 +7,7 @@ on:
   schedule:
     - cron: '0 * * * *'  # Exécute chaque heure
   workflow_dispatch:  # Permet de lancer manuellement le script
-  repository_dispatch:  # Ajoute la prise en charge de l'événement envoyé par Postman
+  repository_dispatch:  # Prend en charge l'événement envoyé par Postman
     types: [fetch-season]
 
 jobs:
@@ -23,17 +23,25 @@ jobs:
           node-version: '18' # Version recommandée
 
       - name: 📥 Installer les dépendances
-        run: npm install node-fetch@2
+        run: npm ci  # Utilise npm ci pour éviter les conflits de dépendances
+
+      - name: 🔍 Vérification du payload
+        run: echo "Payload: ${{ toJson(github.event.client_payload) }}"
 
       - name: 🔄 Exécuter le bot avec l'URL reçue
-        run: node javascript/bot.js ${{ github.event.client_payload.url }}
-- name: 🔍 Vérification du payload
-  run: echo "Payload: ${{ toJson(github.event.client_payload) }}"
+        env:
+          EPISODE_URL: ${{ github.event.client_payload.url }}
+        run: |
+          if [[ -z "$EPISODE_URL" ]]; then
+            echo "Aucune URL fournie, annulation du script."
+            exit 1
+          fi
+          node javascript/bot.js "$EPISODE_URL"
 
       - name: 📤 Commiter le fichier mis à jour
         run: |
           git config --global user.name "GitHub Actions Bot"
           git config --global user.email "actions@github.com"
           git add episodes.json
-          git commit -m "Mise à jour automatique de episodes.json" || echo "Aucune modification à commiter"
+          git diff --cached --quiet || git commit -m "Mise à jour automatique de episodes.json"
           git push
