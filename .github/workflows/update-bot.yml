@@ -7,6 +7,9 @@ on:
         description: "URL de la saison (ex: https://anime-sama.fr/catalogue/overlord/saison1/vf/)"
         required: false
 
+  repository_dispatch:
+    types: [fetch-season]
+
   schedule:
     - cron: "0 */6 * * *"  # Exécute toutes les 6 heures
 
@@ -28,7 +31,7 @@ jobs:
       - name: 🔄 Exécuter le bot
         run: |
           DEFAULT_URL="https://anime-sama.fr/catalogue/overlord/saison1/vf/"
-          URL_TO_USE="${{ github.event.inputs.sourceUrl || '' }}"
+          URL_TO_USE="${{ github.event.client_payload.url || github.event.inputs.sourceUrl || '' }}"
 
           if [ -z "$URL_TO_USE" ]; then
             echo "⚙️ Aucune URL transmise, utilisation de l'URL par défaut : $DEFAULT_URL"
