@@ -5,16 +5,16 @@ on:
     inputs:
       sourceUrl:
         description: "URL de la saison (ex: https://anime-sama.fr/catalogue/overlord/saison1/vf/)"
-        required: true
+        required: false
 
   schedule:
-    - cron: "0 */6 * * *"  # Exécuter toutes les 6 heures
+    - cron: "0 */6 * * *"  # Exécute toutes les 6 heures
 
 jobs:
   update_episodes:
     runs-on: ubuntu-latest
     steps:
-      - name: 🛎️ Checkout du dépôt
+      - name: 🛎️ Cloner le dépôt
         uses: actions/checkout@v4
 
       - name: 📦 Installer Node.js
@@ -27,11 +27,17 @@ jobs:
 
       - name: 🔄 Exécuter le bot
         run: |
-          if [ -z "${{ github.event.inputs.sourceUrl }}" ]; then
-            echo "❌ Aucune URL transmise via workflow_dispatch."
-            exit 1
+          DEFAULT_URL="https://anime-sama.fr/catalogue/overlord/saison1/vf/"
+          URL_TO_USE="${{ github.event.inputs.sourceUrl || '' }}"
+
+          if [ -z "$URL_TO_USE" ]; then
+            echo "⚙️ Aucune URL transmise, utilisation de l'URL par défaut : $DEFAULT_URL"
+            URL_TO_USE="$DEFAULT_URL"
+          else
+            echo "📡 Utilisation de l'URL transmise : $URL_TO_USE"
           fi
-          node javascript/bot.js "${{ github.event.inputs.sourceUrl }}"
+
+          node javascript/bot.js "$URL_TO_USE"
 
       - name: 📤 Commit & Push si changement
         env:
