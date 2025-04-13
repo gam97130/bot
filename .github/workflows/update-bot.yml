@@ -4,36 +4,47 @@ on:
   workflow_dispatch:
     inputs:
       sourceUrl:
-        description: "URL du fichier episodes.js"
+        description: "URL de la saison (ex: https://anime-sama.fr/catalogue/overlord/saison1/vf/)"
         required: true
 
   schedule:
-    - cron: "0 */6 * * *" # Exécuter toutes les 6 heures
+    - cron: "0 */6 * * *"  # Exécuter toutes les 6 heures
 
 jobs:
-  update-episodes:
+  update_episodes:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: 🛎️ Checkout du dépôt
+        uses: actions/checkout@v4
 
-      - name: Installer Node.js
-        uses: actions/setup-node@v3
+      - name: 📦 Installer Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: 18
 
-      - name: Installer les dépendances
-        run: npm install
+      - name: 📥 Installer les dépendances
+        run: npm install node-fetch@2
 
-      - name: Exécuter le bot
-        run: node javascript/bot.js ${{ github.event.inputs.sourceUrl }}
+      - name: 🔄 Exécuter le bot
+        run: |
+          if [ -z "${{ github.event.inputs.sourceUrl }}" ]; then
+            echo "❌ Aucune URL transmise via workflow_dispatch."
+            exit 1
+          fi
+          node javascript/bot.js "${{ github.event.inputs.sourceUrl }}"
 
-      - name: 📤 Commit et push
+      - name: 📤 Commit & Push si changement
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
+
+          if git diff --quiet episodes.json; then
+            echo "✅ Aucun changement détecté dans episodes.json"
+            exit 0
+          fi
+
           git add episodes.json
-          git commit -m "🔄 Mise à jour automatique de episodes.json" || echo "Aucune modification à commettre"
-          git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git HEAD:main
+          git commit -m "🔄 Mise à jour automatique de episodes.json"
+          git push
