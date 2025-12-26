@@ -1,18 +1,58 @@
 # bot.js
 
-D'accord, voici comment vous pouvez gérer le placement des plots de manière manuelle tout en attribuant automatiquement un plot à chaque joueur à leur arrivée. Je fournirai également un exemple de script pour gérer les plots et le système de grille.
+Pour permettre à votre script de reconnaître le plot et pour s'assurer que les grilles s'affichent correctement, voici des instructions détaillées, y compris où placer chaque script, s'il s'agit d'un script local ou serveur, et comment afficher les grilles.
 
-### 1. Système de Plots
+### 1. Structure des Fichiers et Scripts
 
-**Concept :**
-- Les plots peuvent être pré-placés sur la carte par vous (le développeur) et chaque joueur se verra attribuer l'un de ces plots à son arrivée.
-- Vous pouvez également créer un système qui permet aux joueurs de décorer leur plot une fois qu'ils y sont téléportés.
+#### Placement des Scripts
 
-### 2. Exemple de script pour gérer les plots
+1. **`PlotManager.lua`**
+   - **Placement :** `ServerScriptService`
+   - **Type :** Script serveur
 
-Voici un exemple basique de script pour le système de plots dans `ServerScriptService`.
+2. **`PlacementSystem.lua`**
+   - **Placement :** `StarterPlayer -> StarterPlayerScripts`
+   - **Type :** Script local
 
-**Script : `PlotManager.lua`**
+3. **Script pour afficher la grille**
+   - **Placement :** `ServerScriptService`
+   - **Type :** Script serveur (vous pourrez facilement le modifier pour l'affichage)
+
+### 2. Affichage des Grilles
+
+Pour afficher les grilles sur le terrain afin de vérifier leur fonctionnement, vous pouvez créer un script qui dessine des parties visibles de la grille dans le monde. Voici un exemple que vous pourriez utiliser :
+
+**Script : `GridDisplay.lua`**
+
+```lua
+-- Placer ce script dans ServerScriptService
+local gridSize = 4
+local gridCount = 20 -- Nombre de cases visibles dans chaque direction
+
+for i = 0, gridCount do
+    for j = 0, gridCount do
+        local gridPart = Instance.new("Part") -- Créer une nouvelle part
+        gridPart.Size = Vector3.new(gridSize, 0.1, gridSize)
+        gridPart.Position = Vector3.new(i * gridSize, 0.05, j * gridSize) -- Positionner selon la grille
+        gridPart.Anchored = true
+        gridPart.Transparency = 0.5 -- Rendre la grille semi-transparente
+        gridPart.Color = Color3.fromRGB(255, 255, 0) -- Couleur jaune
+        gridPart.Parent = workspace -- Ajouter à l'espace de travail
+    end
+end
+```
+
+### 3. Modifier le Script `PlotManager.lua`
+
+Pour que le `PlotManager` reconnaisse et affiche les plots, vous devez également vous assurer que chacun de vos plots est bien défini dans le workspace comme suit:
+
+- **Création des Plots :** Placez vos plots en tant que pièces (Parts) dans un dossier nommé `Plots` dans le workspace. Chaque plot devrait avoir un nom unique, par exemple `Plot1`, `Plot2`, etc.
+
+### 4. Résumé des Scripts
+
+#### `PlotManager.lua`
+
+Voici le script complet pour `PlotManager.lua` avec des précisions sur la gestion des plots :
 
 ```lua
 local Players = game:GetService("Players")
@@ -21,9 +61,12 @@ local AssignedPlots = {} -- Table pour suivre les plots attribués
 
 -- Fonction pour initialiser les plots
 local function SetupPlots()
-    for i, plot in ipairs(workspace.Plots:GetChildren()) do
-        Plots[i] = plot
-        AssignedPlots[i] = false -- False indique que le plot n'est pas encore attribué
+    local plotsFolder = workspace:FindFirstChild("Plots")
+    if plotsFolder then
+        for i, plot in ipairs(plotsFolder:GetChildren()) do
+            Plots[i] = plot
+            AssignedPlots[i] = false -- False indique que le plot n'est pas encore attribué
+        end
     end
 end
 
@@ -41,8 +84,7 @@ end
 
 -- Événement pour gérer l'arrivée d'un joueur
 Players.PlayerAdded:Connect(function(player)
-    -- Attendre que le personnage soit chargé
-    player.CharacterAdded:Wait()
+    player.CharacterAdded:Wait() -- Attendre que le personnage soit chargé pour éviter les erreurs
     AssignPlot(player) -- Assigner un plot au joueur
 end)
 
@@ -50,57 +92,12 @@ end)
 SetupPlots()
 ```
 
-### 3. Exemple de système de grille
+### Prochaines Étapes :
 
-**Script : `PlacementSystem.lua`**
-
-Ce script gère le placement de machines sur la grille.
-
-```lua
-local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local MachineModule = require(ReplicatedStorage.Modules.MachineModule) -- Module pour les machines
-
-local gridSize = 4 -- Taille de chaque case de la grille
-local isPlacing = false -- État du mode de placement
-
-local function getGridPosition(mousePosition)
-    local x = math.floor(mousePosition.X / gridSize) * gridSize
-    local y = math.floor(mousePosition.Y / gridSize) * gridSize
-    return Vector3.new(x, 0, y) -- Renvoie la position de la grille
-end
-
-UserInputService.InputBegan:Connect(function(input, isProcessed)
-    if not isProcessed and input.UserInputType == Enum.UserInputType.MouseButton1 and isPlacing then
-        local player = Players.LocalPlayer
-        local mouse = player:GetMouse()
-        
-        local gridPosition = getGridPosition(mouse.Hit.Position) -- Calculer la position de la grille
-        local machine = MachineModule.CreateMachine() -- Appeler une fonction pour créer une machine
-        
-        machine.Position = gridPosition -- Placer la machine sur la grille
-        machine.Parent = workspace -- Ajouter la machine à l'espace de travail
-    end
-end)
-
--- Fonction pour commencer le mode de placement
-function StartPlacement()
-    isPlacing = true
-end
-
--- Fonction pour arrêter le mode de placement
-function StopPlacement()
-    isPlacing = false
-end
-```
-
-### Explication
-
-- Le script `PlotManager.lua` établit un système où des plots sont préalablement définis dans le workspace. Lorsqu'un joueur se connecte, il est automatiquement attribué à un de ces plots, et il est téléporté à sa position.
+1. **Créez un dossier "Plots"** dans le workspace et ajoutez-y des objets Part. Nommez-les comme vous le souhaitez (ex: `Plot1`, `Plot2`, ...).
   
-- Le script `PlacementSystem.lua` permet aux joueurs de placer des machines sur une grille. Le `gridSize` définit la taille d'une case de la grille, et le script détermine la position de la machine sur la grille lors du clic de la souris.
+2. **Ajoutez le script `GridDisplay.lua`** dans `ServerScriptService` pour visualiser la grille.
 
-### Prochaines étapes
+3. **Testez le jeu dans Roblox Studio** en mode "Play" pour vérifier que les plots s'affichent correctement et que les joueurs sont téléportés à leur plot.
 
-Vous pouvez tester ces scripts dans Roblox Studio et apporter des ajustements en fonction des besoins spécifiques de votre jeu. Si vous avez des questions supplémentaires ou avez besoin d'aide avec d'autres fonctionnalités, n'hésitez pas à demander !
+N'hésitez pas à demander si vous avez besoin d'autres précisions ou d'aide supplémentaire !
