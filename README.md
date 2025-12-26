@@ -1,22 +1,18 @@
 # bot.js
 
-Il semble que le système de téléportation des joueurs aux plots ne fonctionne pas comme prévu. Cela peut être dû à la manière dont les plots sont configurés ou à l'ordre d'exécution des scripts. 
 
-Assurons-nous d'ajuster le `PlotManager.lua` pour garantir que les plots soient correctement reconnus et que les joueurs soient bien téléportés à leurs plots lorsqu'ils rejoignent le jeu. Voici quelques étapes et ajustements que vous pouvez essayer :
+Merci pour la clarification concernant le système de plots. Je vais vous aider à faire fonctionner correctement l'attribution des plots, que vous utilisiez des `Part` ou des `Model`. Voici les ajustements nécessaires :
 
-### 1. Vérifier la Configuration des Plots
+### 1. Configuration des Plots
 
-Assurez-vous que vos objets plots sont correctement installés dans un dossier nommé `Plots` dans le **workspace**. Chaque plot devrait être un objet de type `Part`. Par exemple :
+Pour que le système reconnaisse les plots, vous devez utiliser un modèle pour chaque plot, ou simplement utiliser un `Part` pour chaque plot. Pour faciliter la gestion :
 
-- **workspace**
-  - **Plots** (dossier)
-    - Plot1 (Part)
-    - Plot2 (Part)
-    - Plot3 (Part)
+- Créez un dossier `Plots` dans `workspace`.
+- À l'intérieur de ce dossier, ajoutez un modèle pour chaque plot. Chaque modèle peut contenir plusieurs parties (par exemple, pour créer des décorations ou des structures plus complexes).
 
 ### 2. Modification du Script `PlotManager.lua`
 
-Il est possible que le script ne soit pas exécuté après que le personnage du joueur ait été complètement chargé. Essayez cette version modifiée du script pour que la téléportation se fasse une fois que le Character est complètement chargé.
+Voici une version améliorée du script qui est sensible à l'utilisation de modèles. Assurez-vous que le modèle est ancré afin que sa position soit stable à l'utilisation. 
 
 #### `PlotManager.lua`
 
@@ -29,10 +25,14 @@ local AssignedPlots = {}
 local function SetupPlots()
     local plotsFolder = workspace:FindFirstChild("Plots")
     if plotsFolder then
-        for i, plot in ipairs(plotsFolder:GetChildren()) do
-            Plots[i] = plot
-            AssignedPlots[i] = false -- Indique que le plot n'est pas encore attribué
+        for _, plot in ipairs(plotsFolder:GetChildren()) do
+            if plot:IsA("Model") and plot.PrimaryPart then -- Vérifiez si c'est un modèle et a une partie principale
+                table.insert(Plots, plot) -- Ajouter le plot
+                table.insert(AssignedPlots, false) -- Indiquer que le plot n'est pas encore attribué
+            end
         end
+    else
+        warn("Le dossier 'Plots' n'a pas été trouvé dans le workspace.")
     end
 end
 
@@ -43,11 +43,11 @@ local function AssignPlot(player)
         if not AssignedPlots[i] then
             AssignedPlots[i] = true -- Marquer le plot comme attribué
             plotAssigned = true
-
-            -- Assurez-vous que le Character est complètement chargé avant de téléporter le joueur
+            
+            -- S'assurer que le personnage est complètement chargé avant de téléporter le joueur
             player.CharacterAdded:Wait() -- Attendre que le personnage soit ajouté
             local character = player.Character or player.CharacterAdded:Wait() -- Récupérer le personnage
-            character:SetPrimaryPartCFrame(plot.Position + Vector3.new(0, 5, 0)) -- Téléportation au plot
+            character:SetPrimaryPartCFrame(plot.PrimaryPart.CFrame + Vector3.new(0, 5, 0)) -- Téléportation au plot
             player:SetAttribute("CurrentPlot", plot.Name) -- Stocker le nom du plot
             break
         end
@@ -60,7 +60,7 @@ end
 
 -- Événement pour gérer l'arrivée d'un joueur
 Players.PlayerAdded:Connect(function(player)
-    SetupPlots() -- Assurer que la configuration des plots se fasse à chaque fois qu'un joueur se connecte
+    SetupPlots() -- Configuration des plots
     AssignPlot(player) -- Assigner un plot au joueur
 end)
 
@@ -68,17 +68,18 @@ end)
 SetupPlots()
 ```
 
-### 3. Tester le Jeu
+### 3. Conseils Pratiques
 
-1. **Assurez-vous** que le dossier `Plots` contient bien des objets de type `Part`.
-2. **Implémentez les modifications** dans le script `PlotManager.lua`.
-3. **Lancez le jeu** dans Roblox Studio en mode Play pour voir si les joueurs sont maintenant correctement téléportés à leurs plots.
+- **Modèles et Parties Principales :** Assurez-vous que chacun de vos modèles de plot a une propriété `PrimaryPart`. Vous pouvez définir une partie comme `PrimaryPart` dans Roblox Studio :
+  - Cliquez sur le modèle dans l'Explorer.
+  - Dans les propriétés, trouvez la propriété `PrimaryPart` et sélectionnez la partie qui sera la référence pour la téléportation.
+  
+- **Ancrage :** Assurez-vous que les parties des modèles sont ancrées, afin qu'elles ne bougent pas lors de l'exécution du jeu.
 
-### 4. Déboguer
+### 4. Tester
 
-Si cela ne fonctionne toujours pas :
+1. **Créez des modèles de plots** dans le dossier `Plots` comme discuté.
+2. **Implémentez et testez** le script ajusté `PlotManager.lua`.
+3. **Vérifiez à nouveau la console** pour obtenir des avertissements en cas de problèmes ou vérifier si les plots sont bien attribués.
 
-- **Ouvrez la console** dans Roblox Studio (View > Output) pour voir si des messages d'avertissement apparaissent.
-- **Vérifiez si `AssignedPlots` est correctement rempli** lors de la création des joueurs en ajoutant quelques `print()` pour voir quels plots sont attribués.
-
-N'hésitez pas à poser d'autres questions si cela ne résout pas le problème ou si vous avez besoin d'autres ajustements !
+N'hésitez pas à poser d'autres questions ou à demander d'autres ajustements si besoin !
