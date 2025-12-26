@@ -1,85 +1,69 @@
 # bot.js
 
+D'accord, créons un script simple qui va vous aider à tester la détection des plots et vous téléporter à l'un d'eux. Ce script sera conçu pour être utilisé dans `ServerScriptService`. Assurez-vous d'avoir le dossier `Plots` avec des modèles de plot correctement placés dans `workspace`.
 
-Merci pour la clarification concernant le système de plots. Je vais vous aider à faire fonctionner correctement l'attribution des plots, que vous utilisiez des `Part` ou des `Model`. Voici les ajustements nécessaires :
+### Script de Test pour Téléportation
 
-### 1. Configuration des Plots
+Voici un exemple de script qui détecte les modèles dans le dossier `Plots` et vous téléporte à l'un d'eux :
 
-Pour que le système reconnaisse les plots, vous devez utiliser un modèle pour chaque plot, ou simplement utiliser un `Part` pour chaque plot. Pour faciliter la gestion :
-
-- Créez un dossier `Plots` dans `workspace`.
-- À l'intérieur de ce dossier, ajoutez un modèle pour chaque plot. Chaque modèle peut contenir plusieurs parties (par exemple, pour créer des décorations ou des structures plus complexes).
-
-### 2. Modification du Script `PlotManager.lua`
-
-Voici une version améliorée du script qui est sensible à l'utilisation de modèles. Assurez-vous que le modèle est ancré afin que sa position soit stable à l'utilisation. 
-
-#### `PlotManager.lua`
+#### `TeleportToPlot.lua`
 
 ```lua
 local Players = game:GetService("Players")
-local Plots = {}
-local AssignedPlots = {}
+local Workspace = game:GetService("Workspace")
 
--- Fonction pour initialiser les plots
-local function SetupPlots()
-    local plotsFolder = workspace:FindFirstChild("Plots")
+-- Fonction pour téléporter un joueur à un plot
+local function TeleportToPlot(player)
+    -- Vérifiez le dossier "Plots" dans Workspace
+    local plotsFolder = Workspace:FindFirstChild("Plots")
     if plotsFolder then
-        for _, plot in ipairs(plotsFolder:GetChildren()) do
-            if plot:IsA("Model") and plot.PrimaryPart then -- Vérifiez si c'est un modèle et a une partie principale
-                table.insert(Plots, plot) -- Ajouter le plot
-                table.insert(AssignedPlots, false) -- Indiquer que le plot n'est pas encore attribué
+        -- Obtenir tous les plots
+        local plots = plotsFolder:GetChildren()
+        
+        -- Vérifiez s'il y a des plots
+        if #plots > 0 then
+            -- Choisir un plot aléatoire
+            local randomPlot = plots[math.random(1, #plots)]
+            if randomPlot:IsA("Model") and randomPlot.PrimaryPart then
+                -- Attendre que le personnage soit chargé
+                player.CharacterAdded:Wait()
+                local character = player.Character or player.CharacterAdded:Wait()
+                -- Se téléporter à la position du plot
+                character:SetPrimaryPartCFrame(randomPlot.PrimaryPart.CFrame + Vector3.new(0, 5, 0)) -- Élever légèrement au-dessus du plot
+                print(player.Name .. " a été téléporté à " .. randomPlot.Name) -- Message de confirmation
+            else
+                warn("Le plot sélectionné n'est pas un modèle valide ou n'a pas de PrimaryPart.")
             end
+        else
+            warn("Aucun plot trouvé dans le dossier 'Plots'.")
         end
     else
-        warn("Le dossier 'Plots' n'a pas été trouvé dans le workspace.")
+        warn("Le dossier 'Plots' est introuvable dans le Workspace.")
     end
 end
 
--- Fonction pour attribuer un plot à un joueur
-local function AssignPlot(player)
-    local plotAssigned = false
-    for i, plot in ipairs(Plots) do
-        if not AssignedPlots[i] then
-            AssignedPlots[i] = true -- Marquer le plot comme attribué
-            plotAssigned = true
-            
-            -- S'assurer que le personnage est complètement chargé avant de téléporter le joueur
-            player.CharacterAdded:Wait() -- Attendre que le personnage soit ajouté
-            local character = player.Character or player.CharacterAdded:Wait() -- Récupérer le personnage
-            character:SetPrimaryPartCFrame(plot.PrimaryPart.CFrame + Vector3.new(0, 5, 0)) -- Téléportation au plot
-            player:SetAttribute("CurrentPlot", plot.Name) -- Stocker le nom du plot
-            break
-        end
-    end
-
-    if not plotAssigned then
-        warn(player.Name .. " n'a pas pu se voir attribuer un plot.") -- Avertir si aucun plot n'est disponible
-    end
-end
-
--- Événement pour gérer l'arrivée d'un joueur
+-- Événement pour tester la téléportation lorsqu'un joueur rejoint
 Players.PlayerAdded:Connect(function(player)
-    SetupPlots() -- Configuration des plots
-    AssignPlot(player) -- Assigner un plot au joueur
+    player.CharacterAdded:Wait() -- Attendre que le personnage soit chargé
+    TeleportToPlot(player) -- Appel de la fonction pour téléporter le joueur
 end)
 
--- Appel de la fonction pour configurer les plots
-SetupPlots()
 ```
 
-### 3. Conseils Pratiques
+### Instructions pour le Script
 
-- **Modèles et Parties Principales :** Assurez-vous que chacun de vos modèles de plot a une propriété `PrimaryPart`. Vous pouvez définir une partie comme `PrimaryPart` dans Roblox Studio :
-  - Cliquez sur le modèle dans l'Explorer.
-  - Dans les propriétés, trouvez la propriété `PrimaryPart` et sélectionnez la partie qui sera la référence pour la téléportation.
-  
-- **Ancrage :** Assurez-vous que les parties des modèles sont ancrées, afin qu'elles ne bougent pas lors de l'exécution du jeu.
+1. **Placement :** Placez le script ci-dessus dans `ServerScriptService` sous le nom `TeleportToPlot.lua`.
 
-### 4. Tester
+2. **Tester le Script :** 
+   - Lancez votre jeu dans Roblox Studio en mode Play.
+   - Lorsque vous rejoignez le jeu, le script va automatiquement vous téléporter à un des plots disponibles dans le dossier `Plots`.
 
-1. **Créez des modèles de plots** dans le dossier `Plots` comme discuté.
-2. **Implémentez et testez** le script ajusté `PlotManager.lua`.
-3. **Vérifiez à nouveau la console** pour obtenir des avertissements en cas de problèmes ou vérifier si les plots sont bien attribués.
+3. **Console de Débogage :** 
+   - Ouvrez la console (View > Output) pour voir des messages de confirmation ou d'avertissement.
+   - Si un message indique que le plot est introuvable ou que la téléportation a échoué, vérifiez bien les noms et la structure de votre dossier `Plots`.
 
-N'hésitez pas à poser d'autres questions ou à demander d'autres ajustements si besoin !
+### Éléments à Vérifier
+- Assurez-vous que les modèles de plots (comme `plot1`, `plot2`, etc.) ont une propriété **PrimaryPart** définie.
+- Vérifiez que le dossier `Plots` est bien orthographié et placé directement dans l’espace de travail.
+
+Si vous avez d'autres questions ou si certains problèmes persistent, n'hésitez pas à me le faire savoir pour plus d'assistance !
